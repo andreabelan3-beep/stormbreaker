@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TecnoBlu | Front-Office Preventivatore</title>
+  <!-- Tailwind CSS per la grafica -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome per le icone -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
+
+  <!-- API URL Google Apps Script -->
+  <script>
+    const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbzVmk33Cck6fshB3aiRSyIG6bMaKeaRxNn4VJfVbJQ4n_kkJpLZb_TRilLc2POJjmeiog/exec";
+  </script>
+
+  <!-- HEADER / BARRA SUPERIORE -->
+  <header class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-50">
+    <div class="flex items-center space-x-3">
+      <button id="menu-btn" class="text-2xl px-2 py-1 rounded hover:bg-blue-800">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <h1 class="text-xl font-bold tracking-wide">TecnoBlu <span class="text-blue-300 font-normal">| App Cantiere</span></h1>
+    </div>
+    <div class="flex items-center space-x-2">
+      <button onclick="openSettings()" class="bg-blue-800 hover:bg-blue-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+        <i class="fa-solid fa-gear"></i> Impostazioni
+      </button>
+    </div>
+  </header>
+
+  <!-- NAVIGAZIONE SIDEBAR -->
+  <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-slate-900 text-white transform -translate-x-full transition-transform duration-300 ease-in-out z-50 p-5 shadow-2xl">
+    <div class="flex justify-between items-center mb-8 border-b border-slate-700 pb-4">
+      <span class="font-bold text-lg">Menù Principale</span>
+      <button id="close-sidebar" class="text-xl text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <nav class="space-y-4">
+      <a href="#" onclick="showSection('section-clienti')" class="block p-3 rounded-lg hover:bg-slate-800 flex items-center gap-3">
+        <i class="fa-solid fa-users text-blue-400"></i> Clienti & Analisi
+      </a>
+      <a href="#" onclick="openSettings()" class="block p-3 rounded-lg hover:bg-slate-800 flex items-center gap-3">
+        <i class="fa-solid fa-sliders text-blue-400"></i> Impostazioni Admin
+      </a>
+    </nav>
+  </aside>
+
+  <!-- CONTENUTO PRINCIPALE -->
+  <main class="flex-1 p-4 md:p-6 max-w-5xl mx-auto w-full">
+
+    <!-- SEZIONE 1: RICERCA E GESTIONE CLIENTI -->
+    <section id="section-clienti" class="space-y-6">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-user-gear text-blue-600"></i> Gestione Cliente
+        </h2>
+        
+        <div class="flex flex-col md:flex-row gap-3 mb-6">
+          <input type="text" id="search-client" placeholder="Cerca cliente per Nome, Indirizzo o Tel..." class="flex-1 p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+          <button onclick="newClientForm()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-3 rounded-xl shadow-sm flex items-center justify-center gap-2">
+            <i class="fa-solid fa-plus"></i> Nuovo Cliente
+          </button>
+        </div>
+
+        <!-- FORM NUOVO CLIENTE -->
+        <div id="new-client-box" class="hidden bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 mb-6">
+          <h3 class="font-bold text-lg text-slate-800">Anagrafica Nuovo Cliente</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" id="c-nome" placeholder="Nome e Cognome *" class="p-3 border rounded-lg w-full">
+            <input type="text" id="c-indirizzo" placeholder="Indirizzo Cantiere *" class="p-3 border rounded-lg w-full">
+            <input type="tel" id="c-telefono" placeholder="Telefono *" class="p-3 border rounded-lg w-full">
+            <input type="email" id="c-email" placeholder="Email" class="p-3 border rounded-lg w-full">
+          </div>
+          <button onclick="startAnalysis()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl w-full md:w-auto">
+            Avvia Analisi Energetica <i class="fa-solid fa-arrow-right ml-2"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEZIONE 2: FORM AUDIT ENERGETICO (CHECK-LIST CASA) -->
+    <section id="section-audit" class="hidden space-y-6">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+        <div class="flex justify-between items-center border-b pb-4">
+          <h2 class="text-xl font-bold text-slate-900"><i class="fa-solid fa-house-daylight text-blue-600"></i> Check-up Energetico Abitazione</h2>
+          <span id="active-client-label" class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">Cliente: Nuovo</span>
+        </div>
+
+        <!-- UPLOAD APE O CHECKLIST -->
+        <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div>
+            <h4 class="font-bold text-blue-900">Hai l'APE dell'immobile?</h4>
+            <p class="text-sm text-blue-700">Carica il PDF o scatta una foto per estrarre i dati.</p>
+          </div>
+          <input type="file" id="ape-file" class="hidden" accept="image/*,application/pdf">
+          <button onclick="document.getElementById('ape-file').click()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700">
+            <i class="fa-solid fa-upload mr-1"></i> Carica APE
+          </button>
+        </div>
+
+        <!-- CAMPI CHECKLIST STRUTTURA -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold mb-1">Superficie Riscaldata (m²)</label>
+            <input type="number" id="f-superficie" placeholder="es. 120" class="p-3 border rounded-xl w-full">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1">Occupanti Abitazione</label>
+            <input type="number" id="f-occupanti" placeholder="es. 4" class="p-3 border rounded-xl w-full">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1">Utilizzo Riscaldamento</label>
+            <select id="f-utilizzo" class="p-3 border rounded-xl w-full">
+              <option value="Sempre acceso (24h)">Sempre acceso (24h)</option>
+              <option value="Fasce orarie">Fasce orarie</option>
+              <option value="Manuale">Manuale</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1">Terminali Riscaldamento</label>
+            <select id="f-terminali" class="p-3 border rounded-xl w-full">
+              <option value="Radiatori ghisa/alluminio">Radiatori ghisa / alluminio</option>
+              <option value="Pannelli radianti a pavimento">Pannelli radianti a pavimento</option>
+              <option value="Fan-coil / Venticonvettori">Fan-coil / Venticonvettori</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1">Muratura & Isolamento</label>
+            <select id="f-muratura" class="p-3 border rounded-xl w-full">
+              <option value="Mattoni forati / Pieni">Mattoni forati / Pieni</option>
+              <option value="Pietra / Prefabbricato">Pietra / Prefabbricato</option>
+              <option value="Con Cappotto Termico">Con Cappotto Termico</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1">Tipo Serramenti</label>
+            <select id="f-serramenti" class="p-3 border rounded-xl w-full">
+              <option value="Doppio Vetro PVC/Legno">Doppio Vetro PVC/Legno</option>
+              <option value="Singolo Vetro Legno/Alluminio">Singolo Vetro Legno/Alluminio</option>
+              <option value="Triplo Vetro">Triplo Vetro</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- SCHEMATICA PDC E FOTO BOLLETTE -->
+        <hr class="my-4">
+        <h3 class="font-bold text-lg text-slate-800">Configurazione Impianto & Bollette</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold mb-1">Schema Pompa di Calore Proposto</label>
+            <select id="f-schema-pdc" class="p-3 border rounded-xl w-full">
+              <option value="Armadio Integrato con PdC Splittata">Armadio Integrato con PdC Splittata</option>
+              <option value="Monoblocco + Accumulo Esterno">Monoblocco + Accumulo Esterno</option>
+              <option value="Monoblocco + Scaldaacqua Indipendente (ACS)">Monoblocco + Scaldaacqua Indipendente (ACS)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1">Fotovoltaico Proposto / Esistente</label>
+            <select id="f-fv" class="p-3 border rounded-xl w-full">
+              <option value="Assente - Stima Nuova Installazione 6kW">Assente - Stima Nuova Installazione 6kW</option>
+              <option value="Assente - Stima Nuova Installazione 9kW">Assente - Stima Nuova Installazione 9kW</option>
+              <option value="Presente - Integrare solo BDC">Presente - Integrare solo PdC</option>
+            </select>
+          </div>
+        </div>
+
+        <button onclick="goToOffer()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold p-4 rounded-xl w-full text-center text-lg mt-6">
+          Calcola Taglia e Calibra Offerta <i class="fa-solid fa-calculator ml-2"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- SEZIONE 3: SELEZIONE PRODOTTI, TRIMMING E OFFERTA -->
+    <section id="section-offerta" class="hidden space-y-6">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+        <h2 class="text-xl font-bold text-slate-900 border-b pb-4"><i class="fa-solid fa-file-invoice-dollar text-emerald-600"></i> Composizione Offerta Commerciale</h2>
+
+        <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200">
+          <span class="text-xs font-bold text-emerald-800 uppercase tracking-wide">Dimensionamento Automatico</span>
+          <h3 class="text-xl font-extrabold text-emerald-900 mt-1">Taglia Consigliata: <span id="taglia-calc">9 kW</span></h3>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold mb-1">Seleziona Macchina da Catalogo (Filtrato 9 kW)</label>
+            <select id="o-prodotto" onchange="calculateTotal()" class="p-3 border rounded-xl w-full font-semibold">
+              <option value="12500">Pompa di Calore Marca X 9kW Monoblocco - € 12.500</option>
+              <option value="14200">Pompa di Calore Marca Y 9kW Splittata - € 14.200</option>
+              <option value="16800">Sistema Armadio Integrato 9kW - € 16.800</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold mb-1">Trimming Complessità Cantiere</label>
+            <div class="grid grid-cols-3 gap-3">
+              <button type="button" onclick="setTrimming(-10, this)" class="trim-btn p-3 border rounded-xl text-center font-bold hover:bg-slate-100">Semplice (-10%)</button>
+              <button type="button" onclick="setTrimming(0, this)" class="trim-btn p-3 border-2 border-blue-600 bg-blue-50 rounded-xl text-center font-bold text-blue-900">Standard (Base)</button>
+              <button type="button" onclick="setTrimming(15, this)" class="trim-btn p-3 border rounded-xl text-center font-bold hover:bg-slate-100">Complesso (+15%)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIASSUNTO FINALE E PREZZO -->
+        <div class="bg-slate-900 text-white p-6 rounded-2xl space-y-3">
+          <div class="flex justify-between text-sm text-slate-400">
+            <span>Prezzo Macchina & Kit Base:</span>
+            <span id="summary-base">€ 0</span>
+          </div>
+          <div class="flex justify-between text-sm text-slate-400">
+            <span>Quota Manodopera (da Impostazioni Admin):</span>
+            <span id="summary-manodopera">€ 0</span>
+          </div>
+          <div class="flex justify-between text-sm text-slate-400">
+            <span>Adeguamento Complessità (Trimming):</span>
+            <span id="summary-trimming">0%</span>
+          </div>
+          <hr class="border-slate-700">
+          <div class="flex justify-between text-xl font-extrabold text-emerald-400">
+            <span>Totale Offerta al Cliente:</span>
+            <span id="summary-totale">€ 0</span>
+          </div>
+        </div>
+
+        <!-- AZIONI E CONDIVISIONE -->
+        <div class="space-y-3 pt-4">
+          <h4 class="font-bold text-slate-800">Opzioni Condivisione Documenti:</h4>
+          <div class="flex gap-4">
+            <label class="flex items-center gap-2 font-medium cursor-pointer">
+              <input type="checkbox" id="chk-audit" checked class="w-5 h-5 accent-blue-600"> Audit Energetico
+            </label>
+            <label class="flex items-center gap-2 font-medium cursor-pointer">
+              <input type="checkbox" id="chk-offerta" checked class="w-5 h-5 accent-blue-600"> Offerta Commerciale
+            </label>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+            <button onclick="sendWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold p-4 rounded-xl flex items-center justify-center gap-2">
+              <i class="fa-brands fa-whatsapp text-2xl"></i> Invia via WhatsApp
+            </button>
+            <button onclick="saveToGoogleSheets()" class="bg-blue-900 hover:bg-blue-800 text-white font-bold p-4 rounded-xl flex items-center justify-center gap-2">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Salva nel Google Sheet
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODALE IMPOSTAZIONI ADMIN -->
+    <div id="settings-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+        <h3 class="text-xl font-bold text-slate-900 border-b pb-2"><i class="fa-solid fa-lock text-blue-600"></i> Impostazioni Riservate Admin</h3>
+        <div>
+          <label class="block text-sm font-semibold mb-1">% Manodopera Standard sui Lavori</label>
+          <input type="number" id="adm-manodopera" value="20" class="p-3 border rounded-xl w-full font-bold">
+        </div>
+        <p class="text-xs text-slate-500">Questa percentuale viene applicata in automatico sul valore dell'offerta senza essere mostrata durante la trattativa col cliente.</p>
+        <div class="flex justify-end gap-2 pt-2">
+          <button onclick="closeSettings()" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-xl">Chiudi</button>
+          <button onclick="saveSettings()" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-xl">Salva Modifiche</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- SCRIPT LOGICA LOGISTICA -->
+  <script>
+    let currentTrimming = 0;
+    let percentManodopera = 20; // Default
+
+    // Sidebar Toggle
+    document.getElementById('menu-btn').onclick = () => document.getElementById('sidebar').classList.remove('-translate-x-full');
+    document.getElementById('close-sidebar').onclick = () => document.getElementById('sidebar').classList.add('-translate-x-full');
+
+    function showSection(id) {
+      document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+      document.getElementById('sidebar').classList.add('-translate-x-full');
+    }
+
+    function newClientForm() {
+      document.getElementById('new-client-box').classList.toggle('hidden');
+    }
+
+    function startAnalysis() {
+      const nome = document.getElementById('c-nome').value;
+      if(!nome) return alert('Inserisci il nome del cliente');
+      document.getElementById('active-client-label').innerText = 'Cliente: ' + nome;
+      showSection('section-audit');
+    }
+
+    function goToOffer() {
+      showSection('section-offerta');
+      calculateTotal();
+    }
+
+    function setTrimming(val, btn) {
+      currentTrimming = val;
+      document.querySelectorAll('.trim-btn').forEach(b => {
+        b.classList.remove('border-2', 'border-blue-600', 'bg-blue-50', 'text-blue-900');
+      });
+      btn.classList.add('border-2', 'border-blue-600', 'bg-blue-50', 'text-blue-900');
+      calculateTotal();
+    }
+
+    function calculateTotal() {
+      const basePrice = parseFloat(document.getElementById('o-prodotto').value);
+      const manodoperaVal = basePrice * (percentManodopera / 100);
+      const subtotal = basePrice + manodoperaVal;
+      const trimmingVal = subtotal * (currentTrimming / 100);
+      const totale = subtotal + trimmingVal;
+
+      document.getElementById('summary-base').innerText = '€ ' + basePrice.toLocaleString('it-IT');
+      document.getElementById('summary-manodopera').innerText = '€ ' + manodoperaVal.toLocaleString('it-IT');
+      document.getElementById('summary-trimming').innerText = currentTrimming + '%';
+      document.getElementById('summary-totale').innerText = '€ ' + totale.toLocaleString('it-IT');
+    }
+
+    function openSettings() {
+      document.getElementById('settings-modal').classList.remove('hidden');
+    }
+
+    function closeSettings() {
+      document.getElementById('settings-modal').classList.add('hidden');
+    }
+
+    function saveSettings() {
+      percentManodopera = parseFloat(document.getElementById('adm-manodopera').value) || 20;
+      closeSettings();
+      calculateTotal();
+      alert('Impostazioni aggiornate con successo!');
+    }
+
+    function sendWhatsApp() {
+      const tel = document.getElementById('c-telefono').value || '';
+      const nome = document.getElementById('c-nome').value || 'Cliente';
+      const msg = encodeURIComponent(`Ciao ${nome}, ecco il riepilogo dell'analisi energetica e della proposta TecnoBlu.`);
+      window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
+    }
+
+    async function saveToGoogleSheets() {
+      const payload = {
+        nomeCliente: document.getElementById('c-nome').value,
+        indirizzo: document.getElementById('c-indirizzo').value,
+        telefono: document.getElementById('c-telefono').value,
+        email: document.getElementById('c-email').value,
+        superficie: document.getElementById('f-superficie').value,
+        occupanti: document.getElementById('f-occupanti').value,
+        utilizzoRiscaldamento: document.getElementById('f-utilizzo').value,
+        muratura: document.getElementById('f-muratura').value,
+        terminali: document.getElementById('f-terminali').value,
+        schemaPdC: document.getElementById('f-schema-pdc').value,
+        prodottoSelezionato: document.getElementById('o-prodotto').selectedOptions[0].text,
+        prezzoFinale: document.getElementById('summary-totale').innerText
+      };
+
+      try {
+        await fetch(GOOGLE_API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        alert('Analisi salvata con successo sul tuo Google Sheet!');
+      } catch (e) {
+        alert('Errore durante il salvataggio: ' + e.message);
+      }
+    }
+  </script>
+</body>
+</html>
