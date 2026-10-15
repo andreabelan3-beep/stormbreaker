@@ -9,7 +9,7 @@
   <!-- FontAwesome per le icone -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Libreria Gratuita per Generazione PDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
 
@@ -146,11 +146,19 @@
           </div>
         </div>
 
-        <!-- SCHEMATICA PDC E FOTO BOLLETTE -->
+        <!-- SCHEMATICA PDC E CONSUMI BOLLETTE -->
         <hr class="my-4">
-        <h3 class="font-bold text-lg text-slate-800">Configurazione Impianto & Bollette</h3>
+        <h3 class="font-bold text-lg text-slate-800">Consumi da Bolletta & Configurazione Impianto</h3>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold mb-1">Consumo Gas Annuo (Sm³)</label>
+            <input type="number" id="f-sm3" placeholder="es. 2200" class="p-3 border rounded-xl w-full">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1">Consumo Luce Annuo (kWh)</label>
+            <input type="number" id="f-kwh" placeholder="es. 4500" class="p-3 border rounded-xl w-full">
+          </div>
           <div>
             <label class="block text-sm font-semibold mb-1">Schema Pompa di Calore Proposto</label>
             <select id="f-schema-pdc" class="p-3 border rounded-xl w-full">
@@ -237,9 +245,10 @@
               <input type="checkbox" id="chk-offerta" checked class="w-5 h-5 accent-blue-600"> Offerta Commerciale
             </label>
           </div>
-          <button onclick="generateReportPDF()" class="bg-red-700 hover:bg-red-800 text-white font-bold p-4 rounded-xl flex items-center justify-center gap-2">
-  <i class="fa-solid fa-file-pdf text-2xl"></i> Genera Report PDF
-</button>
+
+          <button onclick="generateReportPDF()" class="bg-red-700 hover:bg-red-800 text-white font-bold p-4 rounded-xl w-full flex items-center justify-center gap-2">
+            <i class="fa-solid fa-file-pdf text-2xl"></i> Genera Report PDF
+          </button>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
             <button onclick="sendWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold p-4 rounded-xl flex items-center justify-center gap-2">
@@ -271,7 +280,7 @@
 
   </main>
 
-  <!-- SCRIPT LOGICA LOGISTICA -->
+  <!-- SCRIPT LOGICA LOGISTICA E PDF -->
   <script>
     let currentTrimming = 0;
     let percentManodopera = 20; // Default
@@ -374,170 +383,171 @@
         alert('Errore durante il salvataggio: ' + e.message);
       }
     }
+
     function generateReportPDF() {
-  const nome = document.getElementById('c-nome').value || 'Cliente Demo';
-  const citta = document.getElementById('c-indirizzo').value || 'Porto Viro (RO)';
-  const dataReport = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
+      const nome = document.getElementById('c-nome').value || 'Cliente Demo';
+      const citta = document.getElementById('c-indirizzo').value || 'Porto Viro (RO)';
+      const dataReport = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
 
-  // Dati di calcolo ed input
-  const sup = parseFloat(document.getElementById('f-superficie').value) || 160;
-  const sm3Gas = parseFloat(document.getElementById('f-sm3').value) || 2202;
-  const kwhLuce = parseFloat(document.getElementById('f-kwh').value) || 4764;
-  
-  const costoSm3 = 1.265;
-  const costoKwh = 0.318;
-  const spesaGas = sm3Gas * costoSm3;
-  const spesaLuce = kwhLuce * costoKwh;
-  const spesaAttuale = spesaGas + spesaLuce;
-
-  // Calcolo Scenario A (Solo PdC)
-  const fabbisognoTermico = sm3Gas * 9.08; // ~20.000 kWh
-  const scop = 3.20;
-  const kwhPdc = fabbisognoTermico / scop;
-  const kwhTotScenarioA = kwhLuce + kwhPdc;
-  const spesaScenarioA = kwhTotScenarioA * 0.30;
-  const risparmioA = spesaAttuale - spesaScenarioA;
-
-  // Calcolo Scenario B (PdC + FV + Accumulo)
-  const spesaScenarioB = 428.70;
-  const risparmioB = spesaAttuale - spesaScenarioB;
-  const percentualeRisparmio = Math.round((risparmioB / spesaAttuale) * 100);
-
-  // Prezzi ed Economia
-  const costoPdcLordo = 14850.00;
-  const contoTermico = 6286.71;
-  const costoPdcNetto = costoPdcLordo - contoTermico;
-
-  const costoFvLordo = 19250.00;
-  const detrazioneFv = costoFvLordo * 0.50;
-  const costoFvNetto = costoFvLordo - detrazioneFv;
-
-  const totaleLordo = costoPdcLordo + costoFvLordo;
-  const totaleIncentivi = contoTermico + detrazioneFv;
-  const totaleNetto = totaleLordo - totaleIncentivi;
-
-  const paybackA = (costoPdcNetto / risparmioA).toFixed(1);
-  const paybackB = (totaleNetto / risparmioB).toFixed(1);
-
-  // TEMPLATE HTML IDENTICO AL REPORT TECNOBLU
-  const templateHTML = `
-    <div style="font-family: Arial, sans-serif; padding: 30px; color: #1e293b; line-height: 1.5; font-size: 13px;">
+      // Dati di calcolo ed input
+      const sup = parseFloat(document.getElementById('f-superficie').value) || 160;
+      const sm3Gas = parseFloat(document.getElementById('f-sm3').value) || 2202;
+      const kwhLuce = parseFloat(document.getElementById('f-kwh').value) || 4764;
       
-      <!-- HEADER REPORT -->
-      <div style="border-bottom: 3px solid #1e3a8a; pb-10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <h1 style="color: #1e3a8a; margin: 0; font-size: 24px; font-weight: bold;">TECNOBLU | IMPIANTI</h1>
-          <p style="margin: 0; color: #64748b; font-weight: bold; font-size: 11px;">REPORT COMMERCIALE DI TRANSIZIONE ENERGETICA</p>
+      const costoSm3 = 1.265;
+      const costoKwh = 0.318;
+      const spesaGas = sm3Gas * costoSm3;
+      const spesaLuce = kwhLuce * costoKwh;
+      const spesaAttuale = spesaGas + spesaLuce;
+
+      // Calcolo Scenario A (Solo PdC)
+      const fabbisognoTermico = sm3Gas * 9.08; // ~20.000 kWh
+      const scop = 3.20;
+      const kwhPdc = fabbisognoTermico / scop;
+      const kwhTotScenarioA = kwhLuce + kwhPdc;
+      const spesaScenarioA = kwhTotScenarioA * 0.30;
+      const risparmioA = spesaAttuale - spesaScenarioA;
+
+      // Calcolo Scenario B (PdC + FV + Accumulo)
+      const spesaScenarioB = 428.70;
+      const risparmioB = spesaAttuale - spesaScenarioB;
+      const percentualeRisparmio = Math.round((risparmioB / spesaAttuale) * 100);
+
+      // Prezzi ed Economia
+      const costoPdcLordo = 14850.00;
+      const contoTermico = 6286.71;
+      const costoPdcNetto = costoPdcLordo - contoTermico;
+
+      const costoFvLordo = 19250.00;
+      const detrazioneFv = costoFvLordo * 0.50;
+      const costoFvNetto = costoFvLordo - detrazioneFv;
+
+      const totaleLordo = costoPdcLordo + costoFvLordo;
+      const totaleIncentivi = contoTermico + detrazioneFv;
+      const totaleNetto = totaleLordo - totaleIncentivi;
+
+      const paybackA = (costoPdcNetto / risparmioA).toFixed(1);
+      const paybackB = (totaleNetto / risparmioB).toFixed(1);
+
+      // TEMPLATE HTML IDENTICO AL REPORT TECNOBLU
+      const templateHTML = `
+        <div style="font-family: Arial, sans-serif; padding: 30px; color: #1e293b; line-height: 1.5; font-size: 13px;">
+          
+          <!-- HEADER REPORT -->
+          <div style="border-bottom: 3px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h1 style="color: #1e3a8a; margin: 0; font-size: 24px; font-weight: bold;">TECNOBLU | IMPIANTI</h1>
+              <p style="margin: 0; color: #64748b; font-weight: bold; font-size: 11px;">REPORT COMMERCIALE DI TRANSIZIONE ENERGETICA</p>
+            </div>
+            <div style="text-align: right; font-size: 11px; color: #64748b;">
+              Data: ${dataReport}
+            </div>
+          </div>
+
+          <div style="background-color: #f8fafc; border-left: 4px solid #1e3a8a; padding: 15px; margin-bottom: 20px;">
+            <h2 style="margin: 0 0 5px 0; font-size: 18px; color: #0f172a;">Transizione Energetica: Dalla spesa a gas alla quasi autonomia</h2>
+            <p style="margin: 0; font-weight: bold; color: #334155;">Cliente: ${nome} | ${citta}</p>
+            <p style="margin: 5px 0 0 0; color: #475569; font-size: 12px;"><strong>Soluzione:</strong> Pompa di Calore i-290 + Scalda Acqua ACS | Fotovoltaico 9,5 kWp + Powerwall 13,5 kWh + Backup</p>
+          </div>
+
+          <!-- 1. SINTESI DEL PROGETTO -->
+          <h3 style="color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; font-size: 15px;">1. Sintesi del Progetto</h3>
+          
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; text-align: center;">
+            <thead>
+              <tr style="background-color: #1e3a8a; color: white; font-weight: bold;">
+                <th style="padding: 8px; border: 1px solid #cbd5e1;">SPESA ATTUALE</th>
+                <th style="padding: 8px; border: 1px solid #cbd5e1;">SPESA SCENARIO A</th>
+                <th style="padding: 8px; border: 1px solid #cbd5e1;">SPESA SCENARIO B</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="background-color: #f1f5f9; font-size: 14px; font-weight: bold;">
+                <td style="padding: 10px; border: 1px solid #cbd5e1; color: #b91c1c;">€ ${spesaAttuale.toLocaleString('it-IT', {minimumFractionDigits: 2})}/anno</td>
+                <td style="padding: 10px; border: 1px solid #cbd5e1; color: #d97706;">€ ${spesaScenarioA.toLocaleString('it-IT', {minimumFractionDigits: 2})}/anno</td>
+                <td style="padding: 10px; border: 1px solid #cbd5e1; color: #15803d;">~ € ${spesaScenarioB.toLocaleString('it-IT', {minimumFractionDigits: 2})}/anno</td>
+              </tr>
+              <tr style="font-size: 11px; color: #64748b;">
+                <td style="padding: 6px; border: 1px solid #cbd5e1;">Gas + energia elettrica</td>
+                <td style="padding: 6px; border: 1px solid #cbd5e1;">Solo PDC, tutta da rete</td>
+                <td style="padding: 6px; border: 1px solid #cbd5e1;">PDC + FV + Powerwall</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+            <strong style="color: #166534; font-size: 14px;">RISPARMIO ANNUO STIMATO (SCENARIO B): ~ € ${risparmioB.toLocaleString('it-IT', {minimumFractionDigits: 2})}/anno</strong>
+            <p style="margin: 3px 0 0 0; color: #15803d; font-size: 12px;">Riduzione della spesa energetica modellata: ~ ${percentualeRisparmio}%</p>
+          </div>
+
+          <!-- 2. INVESTIMENTO E INCENTIVI -->
+          <h3 style="color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; font-size: 15px;">2. Investimento e Incentivi</h3>
+          
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+            <thead>
+              <tr style="background-color: #334155; color: white;">
+                <th style="padding: 6px; border: 1px solid #cbd5e1; text-align: left;">Intervento</th>
+                <th style="padding: 6px; border: 1px solid #cbd5e1; text-align: right;">Costo Lordo</th>
+                <th style="padding: 6px; border: 1px solid #cbd5e1; text-align: right;">Incentivo / Detrazione</th>
+                <th style="padding: 6px; border: 1px solid #cbd5e1; text-align: right;">Costo Netto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding: 6px; border: 1px solid #cbd5e1;">PDC i-290 0109 + Scalda Acqua ACS</td>
+                <td style="padding: 6px; border: 1px solid #cbd5e1; text-align: right;">€ ${costoPdcLordo.toLocaleString('it-IT')}</td>
+                <td style="padding: 6px; border: 1px solid #cbd5e1; text-align: right; color: #15803d;">- € ${contoTermico.toLocaleString('it-IT')} (Conto Termico 3.0)</td>
+                <td style="padding: 6px; border: 1px solid #cbd5e1; text-align: right; font-weight: bold;">€ ${costoPdcNetto.toLocaleString('it-IT')}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px; border: 1px solid #cbd5e1;">FV 9.5 kWp + Powerwall 3 + Backup</td>
+                <td style="padding: 6px; border: 1px solid #cbd5e1; text-align: right;">€ ${costoFvLordo.toLocaleString('it-IT')}</td>
+                <td style="padding: 6px; border: 1px solid #cbd5e1; text-align: right; color: #15803d;">- € ${detrazioneFv.toLocaleString('it-IT')} (Detrazione 50%)</td>
+                <td style="padding: 6px; border: 1px solid #cbd5e1; text-align: right; font-weight: bold;">€ ${costoFvNetto.toLocaleString('it-IT')}</td>
+              </tr>
+              <tr style="background-color: #f1f5f9; font-weight: bold;">
+                <td style="padding: 8px; border: 1px solid #cbd5e1;">TOTALE SISTEMA COMPLETO</td>
+                <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right;">€ ${totaleLordo.toLocaleString('it-IT')}</td>
+                <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right; color: #15803d;">- € ${totaleIncentivi.toLocaleString('it-IT')}</td>
+                <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right; color: #1e3a8a; font-size: 14px;">€ ${totaleNetto.toLocaleString('it-IT')}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- 3. RIENTRO INVESTIMENTO (PAYBACK) -->
+          <h3 style="color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; font-size: 15px;">3. Rientro dell'Investimento (Payback Semplice)</h3>
+          
+          <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+            <div style="flex: 1; background-color: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 6px; text-align: center;">
+              <span style="font-size: 11px; color: #64748b; font-weight: bold;">SCENARIO A (Solo PDC)</span>
+              <div style="font-size: 22px; font-weight: bold; color: #d97706; margin: 5px 0;">${paybackA} anni</div>
+              <span style="font-size: 10px; color: #475569;">Investimento Netto € ${costoPdcNetto.toLocaleString('it-IT')}</span>
+            </div>
+            <div style="flex: 1; background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 6px; text-align: center;">
+              <span style="font-size: 11px; color: #166534; font-weight: bold;">SCENARIO B (Sistema Completo)</span>
+              <div style="font-size: 22px; font-weight: bold; color: #15803d; margin: 5px 0;">${paybackB} anni</div>
+              <span style="font-size: 10px; color: #166534;">Investimento Netto € ${totaleNetto.toLocaleString('it-IT')}</span>
+            </div>
+          </div>
+
+          <div style="font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; text-align: center;">
+            TECNOBLU Impianti Termici ed Elettrici - Progetto Integrato di Efficienza Energetica
+          </div>
         </div>
-        <div style="text-align: right; font-size: 11px; color: #64748b;">
-          Data: ${dataReport}
-        </div>
-      </div>
+      `;
 
-      <div style="background-color: #f8fafc; border-left: 4px solid #1e3a8a; padding: 15px; margin-bottom: 20px;">
-        <h2 style="margin: 0 0 5px 0; font-size: 18px; color: #0f172a;">Transizione Energetica: Dalla spesa a gas alla quasi autonomia</h2>
-        <p style="margin: 0; font-weight: bold; color: #334155;">Cliente: ${nome} | ${citta}</p>
-        <p style="margin: 5px 0 0 0; color: #475569; font-size: 12px;"><strong>Soluzione:</strong> Pompa di Calore i-290 + Scalda Acqua ACS | Fotovoltaico 9,5 kWp + Powerwall 13,5 kWh + Backup</p>
-      </div>
+      // OPZIONI GENERAZIONE PDF
+      const opt = {
+        margin:       10,
+        filename:     `Report_TecnoBlu_${nome.replace(/\s+/g, '_')}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
 
-      <!-- 1. SINTESI DEL PROGETTO -->
-      <h3 style="color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; font-size: 15px;">1. Sintesi del Progetto</h3>
-      
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; text-align: center;">
-        <thead>
-          <tr style="background-color: #1e3a8a; color: white; font-weight: bold;">
-            <th style="padding: 8px; border: 1px solid #cbd5e1;">SPESA ATTUALE</th>
-            <th style="padding: 8px; border: 1px solid #cbd5e1;">SPESA SCENARIO A</th>
-            <th style="padding: 8px; border: 1px solid #cbd5e1;">SPESA SCENARIO B</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr style="background-color: #f1f5f9; font-size: 14px; font-weight: bold;">
-            <td style="padding: 10px; border: 1px solid #cbd5e1; color: #b91c1c;">€ ${spesaAttuale.toLocaleString('it-IT', {minimumFractionDigits: 2})}/anno</td>
-            <td style="padding: 10px; border: 1px solid #cbd5e1; color: #d97706;">€ ${spesaScenarioA.toLocaleString('it-IT', {minimumFractionDigits: 2})}/anno</td>
-            <td style="padding: 10px; border: 1px solid #cbd5e1; color: #15803d;">~ € ${spesaScenarioB.toLocaleString('it-IT', {minimumFractionDigits: 2})}/anno</td>
-          </tr>
-          <tr style="font-size: 11px; color: #64748b;">
-            <td style="padding: 6px; border: 1px solid #cbd5e1;">Gas + energia elettrica</td>
-            <td style="padding: 6px; border: 1px solid #cbd5e1;">Solo PDC, tutta da rete</td>
-            <td style="padding: 6px; border: 1px solid #cbd5e1;">PDC + FV + Powerwall</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; rounded-radius: 6px; margin-bottom: 20px;">
-        <strong style="color: #166534; font-size: 14px;">RISPARMIO ANNUO STIMATO (SCENARIO B): ~ € ${risparmioB.toLocaleString('it-IT', {minimumFractionDigits: 2})}/anno</strong>
-        <p style="margin: 3px 0 0 0; color: #15803d; font-size: 12px;">Riduzione della spesa energetica modellata: ~ ${percentualeRisparmio}%</p>
-      </div>
-
-      <!-- 2. INVESTIMENTO E INCENTIVI -->
-      <h3 style="color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; font-size: 15px;">2. Investimento e Incentivi</h3>
-      
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
-        <thead>
-          <tr style="background-color: #334155; color: white;">
-            <th style="padding: 6px; border: 1px solid #cbd5e1; text-align: left;">Intervento</th>
-            <th style="padding: 6px; border: 1px solid #cbd5e1; text-align: right;">Costo Lordo</th>
-            <th style="padding: 6px; border: 1px solid #cbd5e1; text-align: right;">Incentivo / Detrazione</th>
-            <th style="padding: 6px; border: 1px solid #cbd5e1; text-align: right;">Costo Netto</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="padding: 6px; border: 1px solid #cbd5e1;">PDC i-290 0109 + Scalda Acqua ACS</td>
-            <td style="padding: 6px; border: 1px solid #cbd5e1; text-align: right;">€ ${costoPdcLordo.toLocaleString('it-IT')}</td>
-            <td style="padding: 6px; border: 1px solid #cbd5e1; text-align: right; color: #15803d;">- € ${contoTermico.toLocaleString('it-IT')} (Conto Termico 3.0)</td>
-            <td style="padding: 6px; border: 1px solid #cbd5e1; text-align: right; font-weight: bold;">€ ${costoPdcNetto.toLocaleString('it-IT')}</td>
-          </tr>
-          <tr>
-            <td style="padding: 6px; border: 1px solid #cbd5e1;">FV 9.5 kWp + Powerwall 3 + Backup</td>
-            <td style="padding: 6px; border: 1px solid #cbd5e1; text-align: right;">€ ${costoFvLordo.toLocaleString('it-IT')}</td>
-            <td style="padding: 6px; border: 1px solid #cbd5e1; text-align: right; color: #15803d;">- € ${detrazioneFv.toLocaleString('it-IT')} (Detrazione 50%)</td>
-            <td style="padding: 6px; border: 1px solid #cbd5e1; text-align: right; font-weight: bold;">€ ${costoFvNetto.toLocaleString('it-IT')}</td>
-          </tr>
-          <tr style="background-color: #f1f5f9; font-weight: bold;">
-            <td style="padding: 8px; border: 1px solid #cbd5e1;">TOTALE SISTEMA COMPLETO</td>
-            <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right;">€ ${totaleLordo.toLocaleString('it-IT')}</td>
-            <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right; color: #15803d;">- € ${totaleIncentivi.toLocaleString('it-IT')}</td>
-            <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right; color: #1e3a8a; font-size: 14px;">€ ${totaleNetto.toLocaleString('it-IT')}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- 3. RIENTRO INVESTIMENTO (PAYBACK) -->
-      <h3 style="color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; font-size: 15px;">3. Rientro dell'Investimento (Payback Semplice)</h3>
-      
-      <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-        <div style="flex: 1; background-color: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 6px; text-align: center;">
-          <span style="font-size: 11px; color: #64748b; font-weight: bold;">SCENARIO A (Solo PDC)</span>
-          <div style="font-size: 22px; font-weight: bold; color: #d97706; margin: 5px 0;">${paybackA} anni</div>
-          <span style="font-size: 10px; color: #475569;">Investimento Netto € ${costoPdcNetto.toLocaleString('it-IT')}</span>
-        </div>
-        <div style="flex: 1; background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 6px; text-align: center;">
-          <span style="font-size: 11px; color: #166534; font-weight: bold;">SCENARIO B (Sistema Completo)</span>
-          <div style="font-size: 22px; font-weight: bold; color: #15803d; margin: 5px 0;">${paybackB} anni</div>
-          <span style="font-size: 10px; color: #166534;">Investimento Netto € ${totaleNetto.toLocaleString('it-IT')}</span>
-        </div>
-      </div>
-
-      <div style="font-size: 10px; color: #94a3b8; border-t: 1px solid #e2e8f0; padding-top: 10px; text-align: center;">
-        TECNOBLU Impianti Termici ed Elettrici - Progetto Integrato di Efficienza Energetica
-      </div>
-    </div>
-  `;
-
-  // OPZIONI GENERAZIONE PDF
-  const opt = {
-    margin:       10,
-    filename:     `Report_TecnoBlu_${nome.replace(/\s+/g, '_')}.pdf`,
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2 },
-    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
-
-  // GENERAZIONE E DOWNLOAD PDF
-  html2pdf().set(opt).from(templateHTML).save();
-}
+      // GENERAZIONE E DOWNLOAD PDF
+      html2pdf().set(opt).from(templateHTML).save();
+    }
   </script>
 </body>
 </html>
