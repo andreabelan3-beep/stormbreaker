@@ -4,12 +4,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TecnoBlu | Front-Office Preventivatore</title>
-  <!-- Tailwind CSS per la grafica -->
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome per le icone -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Libreria Gratuita per Generazione PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
+  <!-- STILI DEDICATI ALLA STAMPA / GENERAZIONE PDF -->
+  <style>
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #print-report-container, #print-report-container * {
+        visibility: visible;
+      }
+      #print-report-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white;
+        padding: 0;
+        margin: 0;
+      }
+      @page {
+        size: A4 portrait;
+        margin: 10mm;
+      }
+    }
+  </style>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
 
@@ -82,7 +105,7 @@
       </div>
     </section>
 
-    <!-- SEZIONE 2: FORM AUDIT ENERGETICO (CHECK-LIST CASA) -->
+    <!-- SEZIONE 2: FORM AUDIT ENERGETICO -->
     <section id="section-audit" class="hidden space-y-6">
       <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
         <div class="flex justify-between items-center border-b pb-4">
@@ -90,7 +113,6 @@
           <span id="active-client-label" class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">Cliente: Nuovo</span>
         </div>
 
-        <!-- UPLOAD APE O CHECKLIST -->
         <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
             <h4 class="font-bold text-blue-900">Hai l'APE dell'immobile?</h4>
@@ -102,7 +124,6 @@
           </button>
         </div>
 
-        <!-- CAMPI CHECKLIST STRUTTURA -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold mb-1">Superficie Riscaldata (m²)</label>
@@ -146,7 +167,6 @@
           </div>
         </div>
 
-        <!-- SCHEMATICA PDC E CONSUMI BOLLETTE -->
         <hr class="my-4">
         <h3 class="font-bold text-lg text-slate-800">Consumi da Bolletta & Configurazione Impianto</h3>
         
@@ -213,7 +233,6 @@
           </div>
         </div>
 
-        <!-- RIASSUNTO FINALE E PREZZO -->
         <div class="bg-slate-900 text-white p-6 rounded-2xl space-y-3">
           <div class="flex justify-between text-sm text-slate-400">
             <span>Prezzo Macchina & Kit Base:</span>
@@ -234,19 +253,10 @@
           </div>
         </div>
 
-        <!-- AZIONI E CONDIVISIONE -->
         <div class="space-y-3 pt-4">
           <h4 class="font-bold text-slate-800">Opzioni Condivisione Documenti:</h4>
-          <div class="flex gap-4">
-            <label class="flex items-center gap-2 font-medium cursor-pointer">
-              <input type="checkbox" id="chk-audit" checked class="w-5 h-5 accent-blue-600"> Audit Energetico
-            </label>
-            <label class="flex items-center gap-2 font-medium cursor-pointer">
-              <input type="checkbox" id="chk-offerta" checked class="w-5 h-5 accent-blue-600"> Offerta Commerciale
-            </label>
-          </div>
 
-          <button onclick="generateReportPDF(event)" class="bg-red-700 hover:bg-red-800 text-white font-bold p-4 rounded-xl w-full flex items-center justify-center gap-2">
+          <button onclick="generateReportPDF()" class="bg-red-700 hover:bg-red-800 text-white font-bold p-4 rounded-xl w-full flex items-center justify-center gap-2 shadow-lg">
             <i class="fa-solid fa-file-pdf text-2xl"></i> Genera e Scarica Report PDF
           </button>
 
@@ -280,12 +290,14 @@
 
   </main>
 
-  <!-- SCRIPT LOGICA LOGISTICA E GENERATORE PDF -->
+  <!-- CONTENITORE TEMPORANEO PER LA STAMPA DEL REPORT -->
+  <div id="print-report-container" class="hidden"></div>
+
+  <!-- SCRIPT DI LOGICA LOGISTICA E STAMPA -->
   <script>
     let currentTrimming = 0;
-    let percentManodopera = 20; // Default
+    let percentManodopera = 20;
 
-    // Sidebar Toggle
     document.getElementById('menu-btn').onclick = () => document.getElementById('sidebar').classList.remove('-translate-x-full');
     document.getElementById('close-sidebar').onclick = () => document.getElementById('sidebar').classList.add('-translate-x-full');
 
@@ -384,38 +396,27 @@
       }
     }
 
-    function generateReportPDF(e) {
-      if (e) e.preventDefault();
-
+    function generateReportPDF() {
       const nome = document.getElementById('c-nome').value || 'Cliente Demo';
       const citta = document.getElementById('c-indirizzo').value || 'Porto Viro (RO)';
       const dataReport = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
 
-      // Dati di calcolo ed input
-      const sup = parseFloat(document.getElementById('f-superficie').value) || 160;
       const sm3Gas = parseFloat(document.getElementById('f-sm3').value) || 2202;
       const kwhLuce = parseFloat(document.getElementById('f-kwh').value) || 4764;
       
-      const costoSm3 = 1.265;
-      const costoKwh = 0.318;
-      const spesaGas = sm3Gas * costoSm3;
-      const spesaLuce = kwhLuce * costoKwh;
+      const spesaGas = sm3Gas * 1.265;
+      const spesaLuce = kwhLuce * 0.318;
       const spesaAttuale = spesaGas + spesaLuce;
 
-      // Calcolo Scenario A (Solo PdC)
       const fabbisognoTermico = sm3Gas * 9.08;
-      const scop = 3.20;
-      const kwhPdc = fabbisognoTermico / scop;
-      const kwhTotScenarioA = kwhLuce + kwhPdc;
-      const spesaScenarioA = kwhTotScenarioA * 0.30;
+      const kwhPdc = fabbisognoTermico / 3.20;
+      const spesaScenarioA = (kwhLuce + kwhPdc) * 0.30;
       const risparmioA = spesaAttuale - spesaScenarioA;
 
-      // Calcolo Scenario B (PdC + FV + Accumulo)
       const spesaScenarioB = 428.70;
       const risparmioB = spesaAttuale - spesaScenarioB;
       const percentualeRisparmio = Math.round((risparmioB / spesaAttuale) * 100);
 
-      // Prezzi ed Economia
       const costoPdcLordo = 14850.00;
       const contoTermico = 6286.71;
       const costoPdcNetto = costoPdcLordo - contoTermico;
@@ -431,17 +432,11 @@
       const paybackA = (costoPdcNetto / risparmioA).toFixed(1);
       const paybackB = (totaleNetto / risparmioB).toFixed(1);
 
-      // Elemento temporaneo isolato per html2pdf
-      const pdfContainer = document.createElement('div');
-      pdfContainer.style.position = 'absolute';
-      pdfContainer.style.left = '-9999px';
-      pdfContainer.style.top = '0';
-      pdfContainer.style.width = '210mm';
+      const printContainer = document.getElementById('print-report-container');
       
-      pdfContainer.innerHTML = `
-        <div style="font-family: Arial, sans-serif; padding: 25px; color: #1e293b; line-height: 1.4; font-size: 12px; background: #ffffff;">
+      printContainer.innerHTML = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #1e293b; line-height: 1.4; font-size: 12px; background: #ffffff;">
           
-          <!-- HEADER REPORT -->
           <div style="border-bottom: 3px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
             <div>
               <h1 style="color: #1e3a8a; margin: 0; font-size: 22px; font-weight: bold;">TECNOBLU | IMPIANTI</h1>
@@ -458,7 +453,6 @@
             <p style="margin: 3px 0 0 0; color: #475569; font-size: 11px;"><strong>Soluzione:</strong> Pompa di Calore i-290 + Scalda Acqua ACS | Fotovoltaico 9,5 kWp + Powerwall 13,5 kWh + Backup</p>
           </div>
 
-          <!-- 1. SINTESI DEL PROGETTO -->
           <h3 style="color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; font-size: 14px; margin-top: 15px;">1. Sintesi del Progetto</h3>
           
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; text-align: center;">
@@ -488,7 +482,6 @@
             <p style="margin: 2px 0 0 0; color: #15803d; font-size: 11px;">Riduzione della spesa energetica modellata: ~ ${percentualeRisparmio}%</p>
           </div>
 
-          <!-- 2. INVESTIMENTO E INCENTIVI -->
           <h3 style="color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; font-size: 14px; margin-top: 15px;">2. Investimento e Incentivi</h3>
           
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
@@ -522,7 +515,6 @@
             </tbody>
           </table>
 
-          <!-- 3. RIENTRO INVESTIMENTO (PAYBACK) -->
           <h3 style="color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; font-size: 14px; margin-top: 15px;">3. Rientro dell'Investimento (Payback Semplice)</h3>
           
           <div style="display: flex; gap: 12px; margin-bottom: 15px;">
@@ -544,23 +536,9 @@
         </div>
       `;
 
-      document.body.appendChild(pdfContainer);
-
-      const opt = {
-        margin:       [5, 5, 5, 5],
-        filename:     `Report_TecnoBlu_${nome.replace(/\s+/g, '_')}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-
-      html2pdf().set(opt).from(pdfContainer).save().then(() => {
-        document.body.removeChild(pdfContainer);
-      }).catch((err) => {
-        console.error("Errore generazione PDF:", err);
-        document.body.removeChild(pdfContainer);
-        alert("Errore durante la creazione del PDF. Assicurati di aver compilato i dati.");
-      });
+      printContainer.classList.remove('hidden');
+      window.print();
+      printContainer.classList.add('hidden');
     }
   </script>
 </body>
