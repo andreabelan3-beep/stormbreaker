@@ -4,28 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TecnoBlu | Front-Office Preventivatore</title>
-  <!-- Tailwind CSS -->
+  <!-- Tailwind CSS per la grafica -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome per le icone -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- STILI DEDICATI ALLA STAMPA / GENERAZIONE PDF -->
   <style>
     @media print {
       body * {
         visibility: hidden;
       }
-      #print-report-container, #print-report-container * {
+      #report-preview-card, #report-preview-card * {
         visibility: visible;
       }
-      #print-report-container {
+      #report-preview-card {
         position: absolute;
         left: 0;
         top: 0;
         width: 100%;
-        background: white;
-        padding: 0;
         margin: 0;
+        padding: 0;
+        box-shadow: none;
+        border: none;
+      }
+      .no-print {
+        display: none !important;
       }
       @page {
         size: A4 portrait;
@@ -42,7 +45,7 @@
   </script>
 
   <!-- HEADER / BARRA SUPERIORE -->
-  <header class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-50">
+  <header class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-50 no-print">
     <div class="flex items-center space-x-3">
       <button id="menu-btn" class="text-2xl px-2 py-1 rounded hover:bg-blue-800">
         <i class="fa-solid fa-bars"></i>
@@ -57,7 +60,7 @@
   </header>
 
   <!-- NAVIGAZIONE SIDEBAR -->
-  <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-slate-900 text-white transform -translate-x-full transition-transform duration-300 ease-in-out z-50 p-5 shadow-2xl">
+  <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-slate-900 text-white transform -translate-x-full transition-transform duration-300 ease-in-out z-50 p-5 shadow-2xl no-print">
     <div class="flex justify-between items-center mb-8 border-b border-slate-700 pb-4">
       <span class="font-bold text-lg">Menù Principale</span>
       <button id="close-sidebar" class="text-xl text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
@@ -105,7 +108,7 @@
       </div>
     </section>
 
-    <!-- SEZIONE 2: FORM AUDIT ENERGETICO -->
+    <!-- SEZIONE 2: FORM AUDIT ENERGETICO (CHECK-LIST CASA) -->
     <section id="section-audit" class="hidden space-y-6">
       <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
         <div class="flex justify-between items-center border-b pb-4">
@@ -113,6 +116,7 @@
           <span id="active-client-label" class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">Cliente: Nuovo</span>
         </div>
 
+        <!-- UPLOAD APE O CHECKLIST -->
         <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
             <h4 class="font-bold text-blue-900">Hai l'APE dell'immobile?</h4>
@@ -124,14 +128,15 @@
           </button>
         </div>
 
+        <!-- CAMPI CHECKLIST STRUTTURA -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold mb-1">Superficie Riscaldata (m²)</label>
-            <input type="number" id="f-superficie" placeholder="es. 120" class="p-3 border rounded-xl w-full">
+            <input type="number" id="f-superficie" placeholder="es. 160" value="160" class="p-3 border rounded-xl w-full">
           </div>
           <div>
             <label class="block text-sm font-semibold mb-1">Occupanti Abitazione</label>
-            <input type="number" id="f-occupanti" placeholder="es. 4" class="p-3 border rounded-xl w-full">
+            <input type="number" id="f-occupanti" placeholder="es. 4" value="4" class="p-3 border rounded-xl w-full">
           </div>
           <div>
             <label class="block text-sm font-semibold mb-1">Utilizzo Riscaldamento</label>
@@ -167,32 +172,33 @@
           </div>
         </div>
 
+        <!-- CONSUMI BOLLETTE E CONFIGURAZIONE PDC/FV -->
         <hr class="my-4">
         <h3 class="font-bold text-lg text-slate-800">Consumi da Bolletta & Configurazione Impianto</h3>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold mb-1">Consumo Gas Annuo (Sm³)</label>
-            <input type="number" id="f-sm3" placeholder="es. 2200" class="p-3 border rounded-xl w-full">
+            <input type="number" id="f-sm3" placeholder="es. 2200" value="2200" class="p-3 border rounded-xl w-full font-bold">
           </div>
           <div>
             <label class="block text-sm font-semibold mb-1">Consumo Luce Annuo (kWh)</label>
-            <input type="number" id="f-kwh" placeholder="es. 4500" class="p-3 border rounded-xl w-full">
+            <input type="number" id="f-kwh" placeholder="es. 4500" value="4500" class="p-3 border rounded-xl w-full font-bold">
           </div>
           <div>
             <label class="block text-sm font-semibold mb-1">Schema Pompa di Calore Proposto</label>
-            <select id="f-schema-pdc" class="p-3 border rounded-xl w-full">
-              <option value="Armadio Integrato con PdC Splittata">Armadio Integrato con PdC Splittata</option>
-              <option value="Monoblocco + Accumulo Esterno">Monoblocco + Accumulo Esterno</option>
-              <option value="Monoblocco + Scaldaacqua Indipendente (ACS)">Monoblocco + Scaldaacqua Indipendente (ACS)</option>
+            <select id="f-schema-pdc" class="p-3 border rounded-xl w-full font-medium">
+              <option value="Pompa di Calore i-290 + Scalda Acqua ACS">Armadio Integrato con PdC i-290 + ACS</option>
+              <option value="Monoblocco i-290 + Accumulo Esterno">Monoblocco i-290 + Accumulo Esterno</option>
+              <option value="Monoblocco + Scaldaacqua Indipendente">Monoblocco + Scaldaacqua Indipendente</option>
             </select>
           </div>
           <div>
             <label class="block text-sm font-semibold mb-1">Fotovoltaico Proposto / Esistente</label>
-            <select id="f-fv" class="p-3 border rounded-xl w-full">
-              <option value="Assente - Stima Nuova Installazione 6kW">Assente - Stima Nuova Installazione 6kW</option>
-              <option value="Assente - Stima Nuova Installazione 9kW">Assente - Stima Nuova Installazione 9kW</option>
-              <option value="Presente - Integrare solo BDC">Presente - Integrare solo PdC</option>
+            <select id="f-fv" class="p-3 border rounded-xl w-full font-medium">
+              <option value="Fotovoltaico 9,5 kWp + Powerwall 13,5 kWh + Backup">Fotovoltaico 9,5 kWp + Powerwall + Backup</option>
+              <option value="Fotovoltaico 6,0 kWp + Accumulo 10 kWh">Fotovoltaico 6,0 kWp + Accumulo 10 kWh</option>
+              <option value="Presente - Integrare solo PdC">Impianto FV Esistente (Solo PdC)</option>
             </select>
           </div>
         </div>
@@ -217,9 +223,9 @@
           <div>
             <label class="block text-sm font-semibold mb-1">Seleziona Macchina da Catalogo (Filtrato 9 kW)</label>
             <select id="o-prodotto" onchange="calculateTotal()" class="p-3 border rounded-xl w-full font-semibold">
+              <option value="14850">Pompa di Calore i-290 0109 + Scalda Acqua ACS - € 14.850</option>
               <option value="12500">Pompa di Calore Marca X 9kW Monoblocco - € 12.500</option>
-              <option value="14200">Pompa di Calore Marca Y 9kW Splittata - € 14.200</option>
-              <option value="16800">Sistema Armadio Integrato 9kW - € 16.800</option>
+              <option value="16800">Sistema Armadio Integrato Premium 9kW - € 16.800</option>
             </select>
           </div>
 
@@ -233,6 +239,7 @@
           </div>
         </div>
 
+        <!-- RIASSUNTO PREZZO -->
         <div class="bg-slate-900 text-white p-6 rounded-2xl space-y-3">
           <div class="flex justify-between text-sm text-slate-400">
             <span>Prezzo Macchina & Kit Base:</span>
@@ -253,11 +260,10 @@
           </div>
         </div>
 
+        <!-- AZIONI E GENERAZIONE REPORT -->
         <div class="space-y-3 pt-4">
-          <h4 class="font-bold text-slate-800">Opzioni Condivisione Documenti:</h4>
-
-          <button onclick="generateReportPDF()" class="bg-red-700 hover:bg-red-800 text-white font-bold p-4 rounded-xl w-full flex items-center justify-center gap-2 shadow-lg">
-            <i class="fa-solid fa-file-pdf text-2xl"></i> Genera e Scarica Report PDF
+          <button onclick="renderReportPreview()" class="bg-red-700 hover:bg-red-800 text-white font-bold p-4 rounded-xl w-full flex items-center justify-center gap-2 shadow-lg">
+            <i class="fa-solid fa-file-pdf text-2xl"></i> Genera Anteprima & Scarica Report PDF
           </button>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
@@ -269,11 +275,26 @@
             </button>
           </div>
         </div>
+
+        <!-- RIQUADRO ANTEPRIMA VISIBILE DEL REPORT -->
+        <div id="report-preview-box" class="hidden pt-6 border-t border-slate-300">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="font-bold text-lg text-slate-900">Anteprima Report Generato:</h3>
+            <button onclick="window.print()" class="bg-blue-600 text-white font-bold px-4 py-2 rounded-lg text-sm hover:bg-blue-700 flex items-center gap-2">
+              <i class="fa-solid fa-print"></i> Stampa / Salva in PDF
+            </button>
+          </div>
+          
+          <div id="report-preview-card" class="bg-white p-6 rounded-xl border border-slate-300 shadow-md">
+            <!-- Il contenuto del report verrà iniettato qui via JS -->
+          </div>
+        </div>
+
       </div>
     </section>
 
     <!-- MODALE IMPOSTAZIONI ADMIN -->
-    <div id="settings-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div id="settings-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print">
       <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
         <h3 class="text-xl font-bold text-slate-900 border-b pb-2"><i class="fa-solid fa-lock text-blue-600"></i> Impostazioni Riservate Admin</h3>
         <div>
@@ -290,10 +311,6 @@
 
   </main>
 
-  <!-- CONTENITORE TEMPORANEO PER LA STAMPA DEL REPORT -->
-  <div id="print-report-container" class="hidden"></div>
-
-  <!-- SCRIPT DI LOGICA LOGISTICA E STAMPA -->
   <script>
     let currentTrimming = 0;
     let percentManodopera = 20;
@@ -396,13 +413,15 @@
       }
     }
 
-    function generateReportPDF() {
+    function renderReportPreview() {
       const nome = document.getElementById('c-nome').value || 'Cliente Demo';
       const citta = document.getElementById('c-indirizzo').value || 'Porto Viro (RO)';
       const dataReport = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
 
       const sm3Gas = parseFloat(document.getElementById('f-sm3').value) || 2202;
       const kwhLuce = parseFloat(document.getElementById('f-kwh').value) || 4764;
+      const schemaPdC = document.getElementById('f-schema-pdc').value;
+      const fvSchema = document.getElementById('f-fv').value;
       
       const spesaGas = sm3Gas * 1.265;
       const spesaLuce = kwhLuce * 0.318;
@@ -417,7 +436,7 @@
       const risparmioB = spesaAttuale - spesaScenarioB;
       const percentualeRisparmio = Math.round((risparmioB / spesaAttuale) * 100);
 
-      const costoPdcLordo = 14850.00;
+      const costoPdcLordo = parseFloat(document.getElementById('o-prodotto').value) || 14850.00;
       const contoTermico = 6286.71;
       const costoPdcNetto = costoPdcLordo - contoTermico;
 
@@ -432,10 +451,11 @@
       const paybackA = (costoPdcNetto / risparmioA).toFixed(1);
       const paybackB = (totaleNetto / risparmioB).toFixed(1);
 
-      const printContainer = document.getElementById('print-report-container');
-      
-      printContainer.innerHTML = `
-        <div style="font-family: Arial, sans-serif; padding: 20px; color: #1e293b; line-height: 1.4; font-size: 12px; background: #ffffff;">
+      const previewBox = document.getElementById('report-preview-box');
+      const previewCard = document.getElementById('report-preview-card');
+
+      previewCard.innerHTML = `
+        <div style="font-family: Arial, sans-serif; color: #1e293b; line-height: 1.4; font-size: 12px; background: #ffffff;">
           
           <div style="border-bottom: 3px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
             <div>
@@ -450,7 +470,7 @@
           <div style="background-color: #f8fafc; border-left: 4px solid #1e3a8a; padding: 12px; margin-bottom: 15px;">
             <h2 style="margin: 0 0 5px 0; font-size: 16px; color: #0f172a;">Transizione Energetica: Dalla spesa a gas alla quasi autonomia</h2>
             <p style="margin: 0; font-weight: bold; color: #334155;">Cliente: ${nome} | ${citta}</p>
-            <p style="margin: 3px 0 0 0; color: #475569; font-size: 11px;"><strong>Soluzione:</strong> Pompa di Calore i-290 + Scalda Acqua ACS | Fotovoltaico 9,5 kWp + Powerwall 13,5 kWh + Backup</p>
+            <p style="margin: 3px 0 0 0; color: #475569; font-size: 11px;"><strong>Soluzione:</strong> ${schemaPdC} | ${fvSchema}</p>
           </div>
 
           <h3 style="color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; font-size: 14px; margin-top: 15px;">1. Sintesi del Progetto</h3>
@@ -472,7 +492,7 @@
               <tr style="font-size: 10px; color: #64748b;">
                 <td style="padding: 4px; border: 1px solid #cbd5e1;">Gas + energia elettrica</td>
                 <td style="padding: 4px; border: 1px solid #cbd5e1;">Solo PDC, tutta da rete</td>
-                <td style="padding: 4px; border: 1px solid #cbd5e1;">PDC + FV + Powerwall</td>
+                <td style="padding: 4px; border: 1px solid #cbd5e1;">PDC + FV + Accumulo</td>
               </tr>
             </tbody>
           </table>
@@ -495,13 +515,13 @@
             </thead>
             <tbody>
               <tr>
-                <td style="padding: 5px; border: 1px solid #cbd5e1;">PDC i-290 0109 + Scalda Acqua ACS</td>
+                <td style="padding: 5px; border: 1px solid #cbd5e1;">${schemaPdC}</td>
                 <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: right;">€ ${costoPdcLordo.toLocaleString('it-IT')}</td>
                 <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: right; color: #15803d;">- € ${contoTermico.toLocaleString('it-IT')} (Conto Termico 3.0)</td>
                 <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: right; font-weight: bold;">€ ${costoPdcNetto.toLocaleString('it-IT')}</td>
               </tr>
               <tr>
-                <td style="padding: 5px; border: 1px solid #cbd5e1;">FV 9.5 kWp + Powerwall 3 + Backup</td>
+                <td style="padding: 5px; border: 1px solid #cbd5e1;">${fvSchema}</td>
                 <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: right;">€ ${costoFvLordo.toLocaleString('it-IT')}</td>
                 <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: right; color: #15803d;">- € ${detrazioneFv.toLocaleString('it-IT')} (Detrazione 50%)</td>
                 <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: right; font-weight: bold;">€ ${costoFvNetto.toLocaleString('it-IT')}</td>
@@ -536,10 +556,11 @@
         </div>
       `;
 
-      printContainer.classList.remove('hidden');
-      window.print();
-      printContainer.classList.add('hidden');
+      previewBox.classList.remove('hidden');
+      previewBox.scrollIntoView({ behavior: 'smooth' });
     }
   </script>
+</body>
+</html>
 </body>
 </html>
